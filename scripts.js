@@ -65,7 +65,7 @@ function generateUserHTML(data,id) {
 galleryArea.addEventListener('click', (e) => {
     const activeCard = e.target.closest('.card')  //get the card
     if(!activeCard) return //if card not found, do nothing.
-    const activeCardIndex = activeCard.dataset.id //get the card id
+    const activeCardIndex = Number(activeCard.dataset.id) //get the card id
     createModal(activeCardIndex)
 })
 
@@ -82,7 +82,7 @@ function createModal(cardIndex){
 class Modal {
     constructor(data, index){
         this.data = data;
-        this.index = index;
+        this.index = Number(index)
         this.html = ''
         this.modalContainer = ''
         this.modalClose = ''
