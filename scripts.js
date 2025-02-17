@@ -1,12 +1,12 @@
 const numberOfUsers = 12;
 const galleryArea = document.getElementById('gallery');
 let userData = {};
+let filteredUserData = {};
 let card = '';
-console.log(userData.length)
+
 //----------------------// 
 //-- Gallery Of Users --//
 //----------------------// 
-
 
 //Show Initial Users
 displayUsers()
@@ -31,6 +31,7 @@ async function fetchData() {
         const response = await fetch(`https://randomuser.me/api/?inc=name,picture,email,location,dob,phone,id&results=${numberOfUsers}`);
         const data = await response.json();
         userData = data.results;
+        filteredUserData = data.results;
         return data.results;
 
     } catch (error) {
@@ -81,13 +82,14 @@ function createModal(cardIndex){
 
 class Modal {
     constructor(data, index){
-        this.data = data;
-        this.index = Number(index)
+        this.data = data;  //card data of single profile
+        this.index = Number(index)  //index of card's data-id html
         this.html = ''
         this.modalContainer = ''
         this.modalClose = ''
         this.modalNext = ''
         this.modalPrevious = ''
+        this.currentUserCount = Number(filteredUserData.length); //number of filtered/unfiltered users
     }
 
     launchModal(){
@@ -103,17 +105,15 @@ class Modal {
     initiateEventListers(){
         this.modalClose.addEventListener('click', (e) => {
             this.modalContainer.remove()
-
         })
 
         this.modalNext.addEventListener('click', (e) => {
             this.modalContainer.remove()
+
             let newIndex = (this.index + 1)
-            if(this.index === (numberOfUsers - 1)) {
+            if(this.index === (this.currentUserCount - 1)) {
                 newIndex = 0
             }
-            console.log(newIndex)
-            console.log(typeof newIndex)
             createModal(newIndex)
         });
 
@@ -121,17 +121,13 @@ class Modal {
             this.modalContainer.remove()
             let newIndex = (this.index - 1)
             if(this.index === 0) {
-                newIndex = (numberOfUsers - 1)
+                newIndex = (this.currentUserCount - 1)
             }
-
-            console.log(newIndex)
-            console.log(typeof newIndex)
             createModal(newIndex)
         });
     }
 
     buildModalHTML(){
-        console.log(this.data)
         this.html = 
         `<div class="modal-container">
             <div class="modal">
