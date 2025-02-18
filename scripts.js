@@ -15,15 +15,18 @@ displayUsers()
 //displayUsers() - Main fucution for gathering, processing and posting users
 async function displayUsers() {
     const user = await fetchData();
-    // console.log(user)
+    if(!user) return
     let finalHTML = '';
     for(let i = 0; i < user.length; i++){
         finalHTML += generateUserHTML(user[i],i)
     }
-    // console.log(finalHTML)
     galleryArea.insertAdjacentHTML('beforeend', finalHTML)
-    card = document.querySelectorAll('.card');
 
+    //add event listeners to cards
+    card = document.querySelectorAll('.card');
+    card.forEach(cardElement => {
+        addCardClickListener(cardElement)
+    })
 }
 
 //fetchData() -  Reach out to the API to set of users for userData
@@ -42,8 +45,6 @@ async function fetchData() {
 
 //generateUserHTML() - Creates the HTML for the main gallery view
 function generateUserHTML(data,id) {
-    // console.log(data)
-
     const userHTML = 
     `<div class="card" data-id="${id}">
         <div class="card-img-container">
@@ -94,7 +95,12 @@ function filterSearch(inputText) {
 
     //Update/display new filtered HTML
     galleryArea.innerHTML = finalHTML
+
+    //add event listeners to new filtered cards
     card = document.querySelectorAll('.card');
+    card.forEach(cardElement => {
+        addCardClickListener(cardElement)
+    })
 }
 
 
@@ -102,13 +108,15 @@ function filterSearch(inputText) {
 //-- Modal Popup Code --//
 //----------------------// 
 
-//Event Listener: Watching for card clicks to initate popup
-galleryArea.addEventListener('click', (e) => {
-    const activeCard = e.target.closest('.card')  //get the card
-    if(!activeCard) return //if card not found, do nothing.
-    const activeCardIndex = Number(activeCard.dataset.id) //get the card index from the HTML Dataset
-    createModal(activeCardIndex)
-})
+//addCardClickListener() -  add listener for card clicks to build and popup
+function addCardClickListener(cardElement) {
+    cardElement.addEventListener('click', (e) => {
+        const activeCard = e.target.closest('.card')  //get the card
+        if(!activeCard) return //if card not found, do nothing.
+        const activeCardIndex = Number(activeCard.dataset.id) //get the card index from the HTML Dataset
+        createModal(activeCardIndex)
+    })
+}
 
 //createModal() - Create the Modal class, popup html and deploy.
 function createModal(cardIndex){
@@ -142,10 +150,11 @@ class Modal {
 
         this.currentUserCount = Number(filteredUserData.length);  //latest count
 
-        this.initiateEventListers(); //add event listeners to each button
+        this.initiateEventListeners(); //add event listeners to each button
     }
 
-    initiateEventListers(){
+    //initiateEventListeners()- Add Popup Button Event Listeners
+    initiateEventListeners(){
         //X button - clear current modal html
         this.modalClose.addEventListener('click', (e) => {
             this.modalContainer.remove() 
