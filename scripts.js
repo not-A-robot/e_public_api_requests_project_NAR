@@ -1,17 +1,18 @@
-const numberOfUsers = 12;
+//Gloabl Variables
+const numberOfUsers = 12;  //amount of users to get in initial api call
 const galleryArea = document.getElementById('gallery');
-let userData = {};
-let filteredUserData = {};
+let userData = {}; //original data download
+let filteredUserData = []; //changing data
 let card = '';
 
 //----------------------// 
-//-- Gallery Of Users --//
+//--   User Gallery   --//
 //----------------------// 
 
-//Show Initial Users
+//Initial Load: Show initial Users
 displayUsers()
 
-//displayUsers(): Main fucution for gathering, processing and posting users
+//displayUsers() - Main fucution for gathering, processing and posting users
 async function displayUsers() {
     const user = await fetchData();
     // console.log(user)
@@ -25,7 +26,7 @@ async function displayUsers() {
 
 }
 
-//fetchData() reach out to the API to generate users
+//fetchData() -  Reach out to the API to set of users for userData
 async function fetchData() {
     try {
         const response = await fetch(`https://randomuser.me/api/?inc=name,picture,email,location,dob,phone,id&results=${numberOfUsers}`);
@@ -39,8 +40,7 @@ async function fetchData() {
     }
 };
 
-
-
+//generateUserHTML() - Creates the HTML for the main gallery view
 function generateUserHTML(data,id) {
     // console.log(data)
 
@@ -59,26 +59,63 @@ function generateUserHTML(data,id) {
 };
 
 //----------------------// 
-//-- Event Listeners --//
+//--     Searchbar    --//
+//----------------------//
+
+//Inital Load: Insert the Searchbar HTML
+const searchDiv = document.querySelector('.search-container')
+const searchHTML = `<form action="#" method="get"><input type="search" id="search-input" class="search-input" placeholder="Search..."><input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit"></form>`
+searchDiv.insertAdjacentHTML('afterbegin', searchHTML)
+const searchBtn = document.querySelector('#search-submit')
+
+//Event Listener: Listen for Search Button click
+searchBtn.addEventListener('click', (e) => {
+    const inputText = document.querySelector('#search-input').value.toLowerCase()
+    filterSearch(inputText)
+});
+
+//filterSearch() - Filter based on the search
+function filterSearch(inputText) {
+    let finalHTML = '';
+    filteredUserData = [];
+
+    //Update filteredUserData with new data that matches search params
+    for(let i = 0; i < userData.length; i++){
+        const userFullName = `${userData[i].name.first}${userData[i].name.last}`.toLowerCase()
+        if(userFullName.includes(inputText) ){
+            filteredUserData.push(userData[i])
+        }
+    }
+
+    //Update the HTML Gallery with the updated filteredUserData
+    for(let i = 0; i < filteredUserData.length; i++){
+        finalHTML += generateUserHTML(filteredUserData[i],i)
+    }
+
+    //Update/display new filtered HTML
+    galleryArea.innerHTML = finalHTML
+    card = document.querySelectorAll('.card');
+}
+
+
+//----------------------// 
+//-- Modal Popup Code --//
 //----------------------// 
 
 //Event Listener: Watching for card clicks to initate popup
 galleryArea.addEventListener('click', (e) => {
     const activeCard = e.target.closest('.card')  //get the card
     if(!activeCard) return //if card not found, do nothing.
-    const activeCardIndex = Number(activeCard.dataset.id) //get the card id
+    const activeCardIndex = Number(activeCard.dataset.id) //get the card index from the HTML Dataset
     createModal(activeCardIndex)
 })
 
+//createModal() - Create the Modal class, popup html and deploy.
 function createModal(cardIndex){
-    const activeCardData = userData[cardIndex] //get the corresponding dataset
-    const activeModal = new Modal(activeCardData, cardIndex) //pass it to the Modal class
+    const activeCardData = filteredUserData[cardIndex] //get the corresponding dataset
+    const activeModal = new Modal(activeCardData, cardIndex) //create Modal Object with selected person data
     activeModal.launchModal()
 }
-
-//----------------------// 
-//-- Modal Popup Code --//
-//----------------------// 
 
 class Modal {
     constructor(data, index){
@@ -89,44 +126,67 @@ class Modal {
         this.modalClose = ''
         this.modalNext = ''
         this.modalPrevious = ''
-        this.currentUserCount = Number(filteredUserData.length); //number of filtered/unfiltered users
+        this.currentUserCount = ''
     }
 
+    //launchModal() - Main fuction: Create & Deploy the Modal
     launchModal(){
-        this.buildModalHTML(this.data);
-        galleryArea.insertAdjacentHTML('afterend', this.html);
+        this.buildModalHTML(this.data);  //build the html
+        galleryArea.insertAdjacentHTML('afterend', this.html); //deploy html
+
+        //create variables the newly created HTML buttons & divs
         this.modalContainer = document.querySelector('.modal-container');
         this.modalClose  = document.querySelector('#modal-close-btn');
         this.modalNext  = document.querySelector('#modal-next');
         this.modalPrevious  = document.querySelector('#modal-prev');
-        this.initiateEventListers();
+
+        this.currentUserCount = Number(filteredUserData.length);  //latest count
+
+        this.initiateEventListers(); //add event listeners to each button
     }
 
     initiateEventListers(){
+        //X button - clear current modal html
         this.modalClose.addEventListener('click', (e) => {
-            this.modalContainer.remove()
+            this.modalContainer.remove() 
         })
 
-        this.modalNext.addEventListener('click', (e) => {
-            this.modalContainer.remove()
+        //Next & Previous Buttons
 
-            let newIndex = (this.index + 1)
-            if(this.index === (this.currentUserCount - 1)) {
-                newIndex = 0
-            }
-            createModal(newIndex)
-        });
+        //if displaying only 1 user, hide next/previous buttons
+        if(this.currentUserCount === 1){
+            this.modalNext.parentElement.style.display = 'none';
 
-        this.modalPrevious.addEventListener('click', (e) => {
-            this.modalContainer.remove()
-            let newIndex = (this.index - 1)
-            if(this.index === 0) {
-                newIndex = (this.currentUserCount - 1)
-            }
-            createModal(newIndex)
-        });
+        //else add event listners to the buttons
+        } else {
+
+            //Next Button
+            this.modalNext.addEventListener('click', (e) => {
+                this.modalContainer.remove()
+
+                //determine the Next user index number & loop if at the end
+                let newIndex = (this.index + 1)
+                if(this.index === (this.currentUserCount - 1)) {
+                    newIndex = 0
+                }
+                createModal(newIndex)
+            });
+            
+            //Previous Button
+            this.modalPrevious.addEventListener('click', (e) => {
+                this.modalContainer.remove()
+
+                //determine the Previous user index number & loopback if at the end
+                let newIndex = (this.index - 1)
+                if(this.index === 0) {
+                    newIndex = (this.currentUserCount - 1)
+                }
+                createModal(newIndex)
+            });
+        }
     }
 
+    //buildModalHTML() - Creates HTML for Popup Modal
     buildModalHTML(){
         this.html = 
         `<div class="modal-container">
@@ -139,7 +199,7 @@ class Modal {
                     <p class="modal-text cap">${this.data.location.city}</p>
                     <hr>
                     <p class="modal-text">${this.data.phone}</p>
-                    <p class="modal-text">${this.data.location.street.number} ${this.data.location.street.name}, ${this.data.location.city}, ${this.data.location.state} ${this.data.location.postcode}</p>
+                    <p class="modal-text">${this.data.location.street.number} ${this.data.location.street.name}, ${this.data.location.city}, ${this.data.location.state} ${this.data.location.postcode}, ${this.data.location.country}</p>
                     <p class="modal-text">Birthday: ${this.convertDate()}</p>
                 </div>
             </div>
@@ -151,7 +211,7 @@ class Modal {
             </div>`;
         }
         
-        
+    //convertDate() - convert UTC to local date US
     convertDate(){
         const date = new Date(this.data.dob.date);
         const formattedDate = date.toLocaleDateString('en-US'); 
