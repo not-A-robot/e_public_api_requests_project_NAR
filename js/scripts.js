@@ -134,7 +134,7 @@ class Modal {
         this.modalClose = ''
         this.modalNext = ''
         this.modalPrevious = ''
-        this.currentUserCount = ''
+        this.currentUserCount = ''  //total users being loaded based on curent/filtered list
     }
 
     //launchModal() - Main fuction: Create & Deploy the Modal
